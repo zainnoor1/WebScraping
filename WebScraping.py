@@ -1,19 +1,21 @@
 import re
 import requests
+import html
 from bs4 import BeautifulSoup
 
 import re
-
+filtered_websites=[]
 def matches_company_name(website, names, ignoreCompany):
     website_lower = website.lower()
-    url_pattern1 = r"https?://[^/&?]+"
     url_pattern = r"https?://[^/]+"
-    url_pattern = r"https?://[^/]+"
-
+    
     # Check for ignored company names
     for ignore_name in ignoreCompany:
         if ignore_name.lower() in website_lower:
             return False
+
+    # Decode HTML-encoded characters
+    website = html.unescape(website)
 
     # Check for matching names
     for name in names:
@@ -21,11 +23,12 @@ def matches_company_name(website, names, ignoreCompany):
             match = re.search(url_pattern, website)
             if match:
                 basic_url = match.group()
-                print(basic_url)
+                parts = basic_url.split('/')
+                basic_url = '/'.join(parts[:3])
+                filtered_websites.append(basic_url)
                 return True  # Return True if a match is found
 
     return False  # Return False if no match is found
-
 
 # Make a request to Google search
 company_name="Sarl Cakir"
@@ -80,7 +83,7 @@ for div in filtered_divs:
         #Step 1 Find Website URLs
         websites = re.findall(website_regex, text1)
         #Step 2 Filter companies url
-        filtered_websites = [website for website in websites if matches_company_name(website, company_names,ignoreCompany)]
+        [website for website in websites if matches_company_name(website, company_names,ignoreCompany)]
         for website in filtered_websites:
             print(website)
         filteredphone_numbers.extend(phone_number_pattern1.findall(text))
