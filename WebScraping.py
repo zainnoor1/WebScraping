@@ -84,13 +84,14 @@ for div in filtered_divs:
         websites = re.findall(website_regex, text1)
         #Step 2 Filter companies url
         [website for website in websites if matches_company_name(website, company_names,ignoreCompany)]
-        for website in filtered_websites:
-            print(website)
         filteredphone_numbers.extend(phone_number_pattern1.findall(text))
         filteredphone_numbers.extend(phone_number_pattern2.findall(text))
         filteredphone_numbers.extend(phone_number_pattern3.findall(text))
         filteredphone_numbers.extend(phone_number_pattern4.findall(text))
         filteredemails.extend(email_pattern.findall(text))
+uniqueUrls=list(set(filtered_websites))
+for website in uniqueUrls:
+    print(website)
 # Regular expression for matching phone numbers in the format +000000000000
 
 # phone_number_pattern2 = re.compile(r'(\+\d{1,3})?[\s.-]?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}')
