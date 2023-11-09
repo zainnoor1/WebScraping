@@ -6,6 +6,20 @@ from bs4 import BeautifulSoup
 import re
 filtered_websites=[]
 websiteUrl=''
+def FilterphoneNumber(text):
+        filteredphone_numbers=[]
+        filteredNumber=filteredphone_numbers.extend(phone_number_pattern1.findall(text))
+        if filteredNumber is  None:
+                filteredNumber=filteredphone_numbers.extend(phone_number_pattern2.findall(text))
+        if filteredNumber is None:
+                filteredphone_numbers.extend(phone_number_pattern3.findall(text))
+        if filteredNumber is  None:
+               filteredphone_numbers.extend(phone_number_pattern4.findall(text))
+        if filteredNumber is  None:
+               filteredphone_numbers.extend(phone_number_pattern5.findall(text))
+        if filteredNumber is None:
+            filteredemails.extend(email_pattern.findall(text))
+        return filteredNumber
 def matches_company_name(website, names, ignoreCompany):
     website_lower = website.lower()
     url_pattern = r"https?://[^/]+"
@@ -44,6 +58,8 @@ phone_number_pattern1 = re.compile(r'\+\d{12}')
 phone_number_pattern2 = re.compile(r'\+\d{2} \d \d{2} \d{2} \d{2} \d{2}')
 phone_number_pattern3 = re.compile(r'\+d{2} \d{3} \d{7}')
 phone_number_pattern4 = re.compile(r'\+\d{2}\s\d{3}\s\d{7}')
+phone_number_pattern5 = re.compile(r'\+\d{2} \d{1,2} \d{2} \d{2} \d{2} \d{2}')
+
 email_pattern = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b')
 
 # Parse the HTML response
@@ -87,14 +103,30 @@ for div in filtered_divs:
         [website for website in websites if matches_company_name(website, company_names,ignoreCompany)]
         #Step 3 filter 2 for our url
         websiteUrl = next((url for url in filtered_websites if name_without_spaces.lower() in url), None) 
-        #Step 4 Hit Website URL
         filteredphone_numbers.extend(phone_number_pattern1.findall(text))
         filteredphone_numbers.extend(phone_number_pattern2.findall(text))
         filteredphone_numbers.extend(phone_number_pattern3.findall(text))
         filteredphone_numbers.extend(phone_number_pattern4.findall(text))
         filteredemails.extend(email_pattern.findall(text))
-
-print(websiteUrl)
+#Step 4 Hit Website URL
+if websiteUrl is not None:
+    webresponse = requests.get(websiteUrl)
+    websoup = BeautifulSoup(webresponse.content, "html.parser")
+    webresponseText=websoup.get_text()
+    #Step 5 Get phone and email from index page
+    phone_numberFromWebsite=FilterphoneNumber(webresponseText)
+    #Step 6 if not get contactus page
+    websitePages=websoup.find_all("a")
+    filtered_a_tags = [tag for tag in websitePages if "contact" in tag.get_text().lower()]
+    first_tag = next(iter(filtered_a_tags), None)
+    href_value = first_tag.get('href', None)
+    contactpageUrl=websiteUrl+'/'+first_tag.get('href', None)
+    #Step 7 Hit ContactUs Page and filter phone , Email
+    contactpageresponse = requests.get(contactpageUrl)
+    contactpagesoup = BeautifulSoup(contactpageresponse.content, "html.parser")
+    contactpageText=str(contactpagesoup)
+    phone_numberFromContactpage=FilterphoneNumber(contactpageText)
+    print(phone_numberFromContactpage)
 # Regular expression for matching phone numbers in the format +000000000000
 
 # phone_number_pattern2 = re.compile(r'(\+\d{1,3})?[\s.-]?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}')
