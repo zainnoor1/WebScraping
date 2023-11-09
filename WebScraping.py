@@ -5,28 +5,32 @@ from bs4 import BeautifulSoup
 
 import re
 filtered_websites=[]
+AllUrls=[]
+facebookurls=[]
 websiteUrl=''
 def FilterphoneNumber(text):
         filteredphone_numbers=[]
-        filteredNumber=filteredphone_numbers.extend(phone_number_pattern1.findall(text))
-        if filteredNumber is  None:
-                filteredNumber=filteredphone_numbers.extend(phone_number_pattern2.findall(text))
-        if filteredNumber is None:
+        filteredphone_numbers.extend(phone_number_pattern1.findall(text))
+        if not filteredphone_numbers:
+            filteredphone_numbers.extend(phone_number_pattern2.findall(text))
+        if not filteredphone_numbers:
                 filteredphone_numbers.extend(phone_number_pattern3.findall(text))
-        if filteredNumber is  None:
+        if not filteredphone_numbers:
                filteredphone_numbers.extend(phone_number_pattern4.findall(text))
-        if filteredNumber is  None:
+        if not filteredphone_numbers:
                filteredphone_numbers.extend(phone_number_pattern5.findall(text))
-        if filteredNumber is None:
+        if not filteredphone_numbers:
             filteredemails.extend(email_pattern.findall(text))
-        return filteredNumber
+        return filteredphone_numbers
 def matches_company_name(website, names, ignoreCompany):
+    AllUrls.append(website)
     website_lower = website.lower()
     url_pattern = r"https?://[^/]+"
     
     # Check for ignored company names
     for ignore_name in ignoreCompany:
         if ignore_name.lower() in website_lower:
+            
             return False
 
     # Decode HTML-encoded characters
@@ -97,36 +101,43 @@ for div in filtered_divs:
         text = div.get_text()
         text1=str(div)
         a+=text
-        #Step 1 Find Website URLs
+        #Step 1.1 Find Website URLs
         websites = re.findall(website_regex, text1)
-        #Step 2 Filter companies url
+        #Step 1.2 Filter companies url
         [website for website in websites if matches_company_name(website, company_names,ignoreCompany)]
-        #Step 3 filter 2 for our url
+        #Step 1.3 filter 2 for our url
         websiteUrl = next((url for url in filtered_websites if name_without_spaces.lower() in url), None) 
         filteredphone_numbers.extend(phone_number_pattern1.findall(text))
         filteredphone_numbers.extend(phone_number_pattern2.findall(text))
         filteredphone_numbers.extend(phone_number_pattern3.findall(text))
         filteredphone_numbers.extend(phone_number_pattern4.findall(text))
         filteredemails.extend(email_pattern.findall(text))
-#Step 4 Hit Website URL
+#Step 1.4 Hit Website URL
 if websiteUrl is not None:
     webresponse = requests.get(websiteUrl)
     websoup = BeautifulSoup(webresponse.content, "html.parser")
     webresponseText=websoup.get_text()
-    #Step 5 Get phone and email from index page
+    #Step 1.5 Get phone and email from index page
     phone_numberFromWebsite=FilterphoneNumber(webresponseText)
-    #Step 6 if not get contactus page
+    #Step 1.6 if not get contactus page
     websitePages=websoup.find_all("a")
     filtered_a_tags = [tag for tag in websitePages if "contact" in tag.get_text().lower()]
     first_tag = next(iter(filtered_a_tags), None)
     href_value = first_tag.get('href', None)
     contactpageUrl=websiteUrl+'/'+first_tag.get('href', None)
-    #Step 7 Hit ContactUs Page and filter phone , Email
+    #Step 1.7 Hit ContactUs Page and filter phone , Email
     contactpageresponse = requests.get(contactpageUrl)
     contactpagesoup = BeautifulSoup(contactpageresponse.content, "html.parser")
     contactpageText=str(contactpagesoup)
     phone_numberFromContactpage=FilterphoneNumber(contactpageText)
+    phone_numberFromContactpage = list(set(phone_numberFromContactpage))
     print(phone_numberFromContactpage)
+if  phone_numberFromContactpage:
+    #Step 2.1 Get Facebook Url
+    facebookurls = [url for url in AllUrls if 'facebook.com' in url]
+    facebookurls=list(set(facebookurls))
+    #trim url to https://www.facebook.com/CakirSARL/
+    print(facebookurls)
 # Regular expression for matching phone numbers in the format +000000000000
 
 # phone_number_pattern2 = re.compile(r'(\+\d{1,3})?[\s.-]?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}')
