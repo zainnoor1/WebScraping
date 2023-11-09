@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 
 import re
 filtered_websites=[]
+websiteUrl=''
 def matches_company_name(website, names, ignoreCompany):
     website_lower = website.lower()
     url_pattern = r"https?://[^/]+"
@@ -84,14 +85,16 @@ for div in filtered_divs:
         websites = re.findall(website_regex, text1)
         #Step 2 Filter companies url
         [website for website in websites if matches_company_name(website, company_names,ignoreCompany)]
+        #Step 3 filter 2 for our url
+        websiteUrl = next((url for url in filtered_websites if name_without_spaces.lower() in url), None) 
+        #Step 4 Hit Website URL
         filteredphone_numbers.extend(phone_number_pattern1.findall(text))
         filteredphone_numbers.extend(phone_number_pattern2.findall(text))
         filteredphone_numbers.extend(phone_number_pattern3.findall(text))
         filteredphone_numbers.extend(phone_number_pattern4.findall(text))
         filteredemails.extend(email_pattern.findall(text))
-uniqueUrls=list(set(filtered_websites))
-for website in uniqueUrls:
-    print(website)
+
+print(websiteUrl)
 # Regular expression for matching phone numbers in the format +000000000000
 
 # phone_number_pattern2 = re.compile(r'(\+\d{1,3})?[\s.-]?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}')
